@@ -57,3 +57,41 @@ export const logoutUser = async (request, response) => {
 
     response.status(204).json({ msg: 'logout successfull' });
 }
+export const authenticateTestUser = async (req, res) => {
+    try {
+      const testUserCredentials = {
+        name: 'Test User',
+        username: 'TestUser',
+        password: 'TestUser', // In a real scenario, ensure passwords are hashed
+      };
+  
+      // Check if the test user already exists
+      let user = await User.findOne({ username: testUserCredentials.username });
+  
+      if (!user) {
+        // If not, create the test user with hashed password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(testUserCredentials.password, salt);
+        user = new User({ ...testUserCredentials, password: hashedPassword });
+        await user.save();
+      }
+  
+      // Generate access and refresh tokens
+      const accessToken = jwt.sign(user.toJSON(), process.env.ACCESS_SECRET_KEY, { expiresIn: '15m' });
+      const refreshToken = jwt.sign(user.toJSON(), process.env.REFRESH_SECRET_KEY);
+  
+      // Save the refresh token
+      const newToken = new Token({ token: refreshToken });
+      await newToken.save();
+  
+      // Send the tokens and user info to the client
+      res.status(200).json({
+        accessToken,
+        refreshToken,
+        name: user.name,
+        username: user.username,
+      });
+    } catch (error) {
+      res.status(500).json({ msg: 'Error during test user authentication' });
+    }
+  };
