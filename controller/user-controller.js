@@ -60,7 +60,7 @@ export const logoutUser = async (request, response) => {
 export const authenticateTestUser = async (req, res) => {
     try {
       const testUserCredentials = {
-        name: 'Test User',
+        name: 'TestUser',
         username: 'TestUser',
         password: 'TestUser', // In a real scenario, ensure passwords are hashed
       };
